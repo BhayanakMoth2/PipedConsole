@@ -5,8 +5,6 @@
 void ThrowLastError(std::string e);
 void Block();
 #define BUFFER_PIPE_SIZE 5120
-int ReadPipe(char * buffer, size_t size, HANDLE hPipe);
-int WritePipe(char * buffer, size_t size, HANDLE hPipe);
 void ThrowLastError(std::string e)
 {
 	int error = GetLastError();
@@ -33,6 +31,19 @@ public:
 	HANDLE hPipe;
 	PipeClient()
 	{
+		Connect();
+		if (hPipe != INVALID_HANDLE_VALUE || GetLastError() != ERROR_PIPE_BUSY)
+		{
+			std::cout << "Created Pipe, GLE=" << GetLastError();
+		
+		}
+		if (hPipe == INVALID_HANDLE_VALUE)
+		{
+			ThrowLastError("Failed to connect to named pipe.");
+		}
+	}
+	int Connect()
+	{
 		while (true)
 		{
 			WaitNamedPipeA(pipename, NMPWAIT_WAIT_FOREVER);
@@ -52,12 +63,6 @@ public:
 				break;
 			}
 		}
-		if (hPipe == INVALID_HANDLE_VALUE)
-		{
-			ThrowLastError("Failed to connect to named pipe.");
-		}
-
-
 	}
 	int ReadPipe(char * buffer, size_t size)
 	{
@@ -113,6 +118,7 @@ public:
 private:
 	DWORD inputBuffer = 256;
 	DWORD outputBuffer = 256;
+	HANDLE hPipe;
 	char * pipename = "\\\\.\\pipe\\namedpipe";
 };
 
