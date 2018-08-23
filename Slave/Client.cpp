@@ -28,7 +28,6 @@ void Block()
 class PipeClient
 {
 public:
-	HANDLE hPipe;
 	PipeClient()
 	{
 		Connect();
@@ -63,6 +62,7 @@ public:
 				break;
 			}
 		}
+		return 0;
 	}
 	int ReadPipe(char * buffer, size_t size)
 	{

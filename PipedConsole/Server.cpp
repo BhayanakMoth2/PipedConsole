@@ -8,9 +8,14 @@
 #include<iostream>
 #include<sstream>
 #define BUFFER_PIPE_SIZE 5120
-
+void Throw_Last_Error(std::string str);
+void Block()
+{
+	std::cout << "Press Any Key To Continue...";
+}
 class Server
 {
+public:
 	Server()
 	{
 		OpenNamedPipe();
@@ -127,7 +132,6 @@ private:
 
 
 
-void Throw_Last_Error(std::string str);
 int WritePipe(char * buff, int size, HANDLE hPipe);
 int ReadPipe(char * buffer, size_t size, HANDLE hPipe);
 int WritePipeVoid(void * buff, int size, HANDLE hPipe);
@@ -217,68 +221,11 @@ void Throw_Last_Error(std::string e)
 		Block();
 	}
 }
-void Block()
-{
-	std::cout << "Press Any Key To Continue...";
-}
+
 int main()
 {
-	DWORD inputBuffer = 256;
-	DWORD outputBuffer = 256;
-	HANDLE _hPipe = CreateNamedPipe(
-		"\\\\.\\pipe\\namedpipe",             // pipe name 
-		PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,       // read/write access 
-		PIPE_TYPE_BYTE |
-		PIPE_WAIT,  // blocking mode 
-		1, // max. instances  
-		outputBuffer,                  // output buffer size 
-		inputBuffer,                  // input buffer size 
-		0,                        // client time-out 
-		NULL);                    // default security attribute 
+	Server server;
 
-	if (_hPipe == INVALID_HANDLE_VALUE)
-	{
-		try
-		{
-			Throw_Last_Error("CreateNamedPipe failed");
-		}
-		catch (const std::runtime_error err)
-		{
-			std::cout << "Runtime Error: " << err.what();
-			return 0;
-		}
-	}
-	int timeout = 100000;
-
-
-	PROCESS_INFORMATION pi;
-	ZeroMemory(&pi, sizeof(pi));
-	STARTUPINFO si;
-	ZeroMemory(&si, sizeof(si));
-	if (!ConnectNamedPipe(_hPipe, NULL))
-	{
-		if (!GetLastError() == ERROR_PIPE_CONNECTED)
-		{
-			try
-			{
-				Throw_Last_Error("Error while connecting to named pipe.");
-			}
-			catch (std::runtime_error err)
-			{
-				std::cout << "GLE= " << GetLastError();
-				Block();
-				return 0;
-			}
-		}
-	}
-	std::cout << "Connected to pipe.\n";
-	std::cout << "Writing to pipe...\n";
-
-	DWORD cbWritten;
-	BOOL fSuccess = FALSE;
-	char  buffer[256] = "Test 123";
-	size_t size = sizeof(buffer);
-	std::cout << buffer;
-	Block();
+	
 	return 0;
 }
