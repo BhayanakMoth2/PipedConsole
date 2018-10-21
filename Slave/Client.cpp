@@ -1,5 +1,5 @@
 #include<conio.h>
-#include <Windows.h>
+#include<Windows.h>
 #include <iostream>
 #include <sstream>
 void ThrowLastError(std::string e);
@@ -28,8 +28,9 @@ void Block()
 class PipeClient
 {
 public:
-	PipeClient()
+	PipeClient(std::string pipename)
 	{
+		pipeName = pipeName + pipename;
 		Connect();
 		if (hPipe != INVALID_HANDLE_VALUE || GetLastError() != ERROR_PIPE_BUSY)
 		{
@@ -45,9 +46,9 @@ public:
 	{
 		while (true)
 		{
-			WaitNamedPipeA(pipename, NMPWAIT_WAIT_FOREVER);
+			WaitNamedPipeA(pipeName.c_str(), NMPWAIT_WAIT_FOREVER);
 			hPipe = CreateFileA(
-				pipename,
+				pipeName.c_str(),
 				GENERIC_READ |
 				GENERIC_WRITE,
 				0,
@@ -74,7 +75,7 @@ public:
 			size,
 			&bytesRead,
 			NULL);
-		if (!fSuccess || bytesRead == 0 || bytesRead != size)
+		if (!fSuccess)
 		{
 			try {
 				if (GetLastError() == ERROR_BROKEN_PIPE)
@@ -93,7 +94,7 @@ public:
 				return 0;
 			}
 		}
-
+		return bytesRead;
 	}
 	int WritePipe(char * buffer, size_t size)
 	{
@@ -115,17 +116,45 @@ public:
 		return 0;
 
 	}
+	int ConsoleOut(std::string message)
+	{
+		char * buffer = new char[message.length()];//<--Destroy this
+		WritePipe(buffer, message.length());
+
+	}
+	void Update()
+	{
+		std::cout << "\n";
+		while (true)
+		{
+			char buffer[256] = " ";
+ 			ReadPipe(buffer, inputBuffer);
+			if (buffer != "")
+			{
+				std::cout << "\n";
+				std::cout << buffer;
+			}
+
+		}
+	}
+	
 private:
 	DWORD inputBuffer = 256;
 	DWORD outputBuffer = 256;
 	HANDLE hPipe;
-	char * pipename = "\\\\.\\pipe\\namedpipe";
+	std::string pipeName = "\\\\.\\pipe\\";
+	char * testpipename = "\\\\.\\pipe\\namedpipe";
 };
 
 
-int main()
+int main(int argc, char *argv[])
 {
-	PipeClient pc;
+	AllocConsole();
 
+	std::string argstr = " ";
+	argstr = argv[1];
+	PipeClient pc(argstr);
+	pc.Update();
+	system("pause");
 	return 0;
 }

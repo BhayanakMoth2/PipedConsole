@@ -16,22 +16,24 @@ void Block()
 class Server
 {
 public:
-	Server()
+	Server(std::string pipename)
 	{
-		OpenNamedPipe();
+		OpenNamedPipe(pipename);
 	}
-	int OpenNamedPipe()
+	int OpenNamedPipe(std::string pipename)
 	{
+
+		pipeurl += pipename;
 		hPipe = CreateNamedPipe(
-			"\\\\.\\pipe\\namedpipe",             // pipe name 
-			PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,       // read/write access 
-			PIPE_TYPE_BYTE |
-			PIPE_WAIT,  // blocking mode 
-			1, // max. instances  
-			outputBuffer,                  // output buffer size 
-			inputBuffer,                  // input buffer size 
-			0,                        // client time-out 
-			NULL);                    // default security attribute 
+			pipeurl .c_str(),				             // pipe name 
+			PIPE_ACCESS_DUPLEX,   // read/write access 
+			PIPE_TYPE_BYTE |							 // Datatype Byte
+			PIPE_WAIT,								     // blocking mode 
+			1,									         // max. instances  
+			outputBuffer,								 // output buffer size 
+			inputBuffer,						         // input buffer size 
+			0,									// client time-out 
+			NULL);							   // default security attribute 
 
 		if (hPipe == INVALID_HANDLE_VALUE)
 		{
@@ -47,11 +49,16 @@ public:
 		}
 		int timeout = 100000;
 
-
+		
 		PROCESS_INFORMATION pi;
 		ZeroMemory(&pi, sizeof(pi));
 		STARTUPINFO si;
 		ZeroMemory(&si, sizeof(si));
+		int retnVal = CreateProcessA("Slave.exe", (LPSTR)pipename.c_str(), NULL, NULL, NULL, DETACHED_PROCESS, NULL, NULL, &si, &pi);
+		if (!retnVal)
+		{
+			retnVal = GetLastError();
+		}
 		if (!ConnectNamedPipe(hPipe, NULL))
 		{
 			if (!GetLastError() == ERROR_PIPE_CONNECTED)
@@ -68,6 +75,7 @@ public:
 				}
 			}
 		}
+
 		std::cout << "Connected to pipe.\n";
 	}
 	int WritePipe(char * buffer, int size)
@@ -123,11 +131,21 @@ public:
 		return 0;
 
 	}
+	void operator <<(char * buffer)
+	{
+		int size = 0;
+		while (buffer[size])
+		{
+			size++;
+		}
+		size++;
+		WritePipe(buffer, size);
+	}
 private:
 	DWORD inputBuffer = 256;
 	DWORD outputBuffer = 256;
 	HANDLE hPipe;
-	char * pipename = "\\\\.\\pipe\\namedpipe";
+	std::string pipeurl = "\\\\.\\pipe\\";
 };
 
 
@@ -224,8 +242,15 @@ void Throw_Last_Error(std::string e)
 
 int main()
 {
-	Server server;
-
-	
+	Server server =Server("namedpipe");
+	char buffer[100] = "Mic Check Mic Check!";
+	server.WritePipe(buffer, 100);
+	std::string strbuffer = " ";
+	while (true)
+	{
+		std::cout << "Enter: ";
+		std::cin >> strbuffer;
+		server << buffer;
+	}
 	return 0;
 }
