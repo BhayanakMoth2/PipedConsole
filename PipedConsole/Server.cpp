@@ -54,7 +54,8 @@ public:
 		ZeroMemory(&pi, sizeof(pi));
 		STARTUPINFO si;
 		ZeroMemory(&si, sizeof(si));
-		int retnVal = CreateProcessA("Slave.exe", (LPSTR)pipename.c_str(), NULL, NULL, NULL, DETACHED_PROCESS, NULL, NULL, &si, &pi);
+		std::string cmd = "Slave.exe " + pipename;
+		int retnVal = CreateProcessA("Slave.exe", (LPSTR)cmd.c_str(), NULL, NULL, NULL, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi);
 		if (!retnVal)
 		{
 			retnVal = GetLastError();
@@ -140,6 +141,11 @@ public:
 		}
 		size++;
 		WritePipe(buffer, size);
+	}
+	void operator <<(std::string buffer)
+	{
+		int size = buffer.length();
+		WritePipe((char*)buffer.c_str(), size);
 	}
 private:
 	DWORD inputBuffer = 256;
@@ -250,7 +256,7 @@ int main()
 	{
 		std::cout << "Enter: ";
 		std::cin >> strbuffer;
-		server << buffer;
+		server << strbuffer;
 	}
 	return 0;
 }

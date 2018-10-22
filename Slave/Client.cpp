@@ -91,7 +91,7 @@ public:
 			{
 				std::cout << err.what();
 				std::cout << "\nQuitting...";
-				return 0;
+				return -1;
 			}
 		}
 		return bytesRead;
@@ -128,14 +128,16 @@ public:
 		while (true)
 		{
 			char buffer[256] = " ";
- 			ReadPipe(buffer, inputBuffer);
+ 			int retnVal = ReadPipe(buffer, inputBuffer);
 			if (buffer != "")
 			{
 				std::cout << "\n";
 				std::cout << buffer;
 			}
-
+			if (retnVal < 0)
+				break;
 		}
+		std::cout << "\nQuitting...";
 	}
 	
 private:
@@ -149,12 +151,21 @@ private:
 
 int main(int argc, char *argv[])
 {
-	AllocConsole();
-
+	
 	std::string argstr = " ";
-	argstr = argv[1];
-	PipeClient pc(argstr);
-	pc.Update();
+		
+		try
+		{
+			argstr = argv[1];
+			PipeClient pc(argstr);
+			pc.Update();
+		
+		}
+		catch (...)
+		{
+			std::cout << "Unknown exception: ";
+			system("pause");
+		}
 	system("pause");
 	return 0;
 }
