@@ -113,7 +113,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Client.cpp" />
+    <ClCompile Include="PipeClient.cpp" />
+    <ClCompile Include="Slave.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ErrorHandling.hpp" />
+    <ClInclude Include="PipeClient.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
