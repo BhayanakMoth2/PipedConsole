@@ -7,8 +7,7 @@
 #include<direct.h>
 #include<iostream>
 #include<sstream>
-
-#define BUFFER_PIPE_SIZE 5120
+#define BUFFERSIZE 1024
 void Throw_Last_Error(std::string str);
 void Block()
 {
@@ -40,8 +39,8 @@ public:
 			PIPE_TYPE_BYTE |							 // Datatype Byte
 			PIPE_WAIT,								     // blocking mode 
 			1,									         // max. instances  
-			outputBuffer,								 // output buffer size 
-			inputBuffer,						         // input buffer size 
+			m_BufferSize,								 // output buffer size 
+			m_BufferSize,						         // input buffer size 
 			0,									         // client time-out 
 			NULL);							             //default security attribute 
 
@@ -80,7 +79,7 @@ public:
 				}
 				catch (std::runtime_error err)
 				{
-					std::cout << "GLE= " << GetLastError();
+					std::cout << "GLE = " << GetLastError();
 					Block();
 					return 0;
 				}
@@ -163,6 +162,10 @@ public:
 	
 		}
 	}
+	void WriteHeader(Header p_Header)
+	{
+		WritePipe((char*)&p_Header, sizeof(Header));
+	}
 	void operator <<(char * buffer)
 	{
 		int size = 0;
@@ -171,16 +174,17 @@ public:
 			size++;
 		}
 		size++;
+		WriteHeader(Header::STRING_INFO);
 		WritePipe(buffer, size);
 	}
 	void operator <<(std::string buffer)
 	{
 		int size = buffer.length();
-		WritePipe((char*)buffer.c_str(), size);
+		WriteHeader(Header::STRING_INFO);
+		WritePipe((char*)buffer.c_str(), size+1);
 	}
 private:
-	DWORD inputBuffer = 256;
-	DWORD outputBuffer = 256;
+	const size_t m_BufferSize = BUFFERSIZE;
 	HANDLE hPipe;
 	std::string pipeurl = "\\\\.\\pipe\\";
 };
@@ -204,12 +208,12 @@ int main()
 {
 	ConsoleServer server = ConsoleServer("namedpipe");
 	char buffer[100] = "Mic Check Mic Check!";
-	server.WritePipe(buffer, 100);
+	server << buffer;
 	std::string strbuffer = " ";
 	while (true)
 	{
 		std::cout << "Enter: ";
-		std::cin >> strbuffer;
+		std::getline(std::cin, strbuffer);
 		server << strbuffer;
 	}
 	return 0;

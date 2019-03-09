@@ -3,24 +3,18 @@
 #include <iostream>
 #include <sstream>
 #include "ErrorHandling.hpp"
-void ThrowLastError(std::string e);
-void Block();
-#define BUFFER_PIPE_SIZE 5120
+#include "PipeClient.hpp"
 int main(int argc, char *argv[])
 {
-	std::string argstr = " ";
+	std::string argstr = argv[1];
 		try
 		{
-			argstr = argv[1];
 			PipeClient pc(argstr);
-			PipeClient pc2(argstr);
 			pc.Update();
-			pc2.Update();
-		
 		}
-		catch (...)
+		catch (std::runtime_error err)
 		{
-			std::cout << "Unknown exception: ";
+			std::cout << "Unknown exception: "<<err.what();
 			system("pause");
 		}
 	system("pause");

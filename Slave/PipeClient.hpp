@@ -13,25 +13,7 @@ enum Header
 	PONG,
 	EXIT
 };
-void Block()
-{
-	std::cout << "\nPress Any Key To Continue...";
-	char a = ' ';
-	getchar();
-}
-void ThrowLastError(std::string e)
-{
-	int error = GetLastError();
-	std::string err;
-	try {
-		throw ErrorHandling::WinError(GetLastError(), e);
-	}
-	catch (const ErrorHandling::WinError err)
-	{
-		std::cout << "RUN TIME EXCEPTION: " <<  err.what();
-		Block();
-	}
-}
+
 class PipeClient
 {
 public:
@@ -41,6 +23,12 @@ public:
 	int WritePipe(char * buffer, size_t size);
 	int ConsoleOut(std::string message);
 	void Update();
+	Header ReadHeader()
+	{
+		Header header;
+		ReadPipe((char*)&header, sizeof(Header));
+		return header;
+	}
 	void ProcessHeader(const Header p_Header)
 	{
 		switch (p_Header)
@@ -48,9 +36,9 @@ public:
 			case STRING_INFO:
 				{
 					char  buffer[BUFFERSIZE];
-					ReadPipe(buffer, m_BufferSize);
+					int bytesRead = ReadPipe(buffer, m_BufferSize);
 					buffer[m_BufferSize - 1] = '\0';
-					std::cout << "[INFO]:" << buffer;
+					std::cout << "[INFO]: " << buffer << "\n";
 					break;
 				}
 			case STRING_WARN:
@@ -58,13 +46,27 @@ public:
 					char  buffer[BUFFERSIZE];
 					ReadPipe(buffer, m_BufferSize);
 					buffer[m_BufferSize - 1] = '\0';
-					std::cout << "[WARNING]:" << buffer;
+					std::cout << "[WARNING]: " << buffer << "\n";
 					break;
 				}
 			case PING:
 				{
 					Header head = Header::PONG;
 					WritePipe((char*)&head, sizeof(Header));
+				}
+			case PONG:
+				{
+					break;
+				}
+			case EXIT:
+				{
+					m_KeepUpdating = false;
+					std::cout << "Quitting...\n";
+					break;
+				}
+			default:
+				{
+					std::cout << "Malformed Packet recieved: " << "\n";
 				}
 		}
 	}
@@ -73,4 +75,5 @@ private:
 	const size_t m_BufferSize = BUFFERSIZE;
 	HANDLE hPipe;
 	std::string m_PipeName = "\\\\.\\pipe\\";
+	bool m_KeepUpdating = true;
 };

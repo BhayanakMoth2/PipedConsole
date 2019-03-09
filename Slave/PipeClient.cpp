@@ -1,6 +1,23 @@
-#pragma once
 #include "PipeClient.hpp"
-
+void Block()
+{
+	std::cout << "\nPress Any Key To Continue...";
+	char a = ' ';
+	getchar();
+}
+void ThrowLastError(std::string e)
+{
+	int error = GetLastError();
+	std::string err;
+	try {
+		throw ErrorHandling::WinError(GetLastError(), e);
+	}
+	catch (const ErrorHandling::WinError err)
+	{
+		std::cout << "RUN TIME EXCEPTION: " << err.what();
+		Block();
+	}
+}
 PipeClient::PipeClient(std::string p_PipeName)
 {
 	m_PipeName = m_PipeName + p_PipeName;
@@ -96,21 +113,22 @@ int PipeClient::ConsoleOut(std::string message)
 	char * buffer = new char[message.length()];//<--Destroy this
 	WritePipe(buffer, message.length());
 	delete buffer;
+	return 0;
 }
 void PipeClient::Update()
 {
 	std::cout << "\n";
+	int retnVal = 0;
 	while (true)
 	{
-		char buffer[256] = " ";
-		int retnVal = ReadPipe(buffer, inputBuffer);
-		if (buffer != "")
-		{
-			std::cout << "\n";
-			std::cout << buffer;
+		try {
+			Header head = ReadHeader();
+			ProcessHeader(head);
 		}
-		if (retnVal < 0)
-			break;
+		catch (ErrorHandling::WinError err)
+		{
+			std::cout << "Error: " << err.what();
+		}
 	}
 	std::cout << "\nQuitting...";
 }
