@@ -81,8 +81,16 @@ int PipeClient::ReadPipe(char * buffer, size_t size)
 		}
 		catch (std::runtime_error err)
 		{
-			std::cout << err.what();
-			std::cout << "\nQuitting...";
+			std::cout << err.what()<<"\n";
+			std::cout << "Quit?(Y/N): ";
+			char c;
+			std::cin >> c;
+			c = tolower(c);
+			if (c == 'y')
+			{
+				m_KeepUpdating = false;
+				std::cout << "Quitting...\n";
+			}
 			return -1;
 		}
 	}
@@ -119,7 +127,7 @@ void PipeClient::Update()
 {
 	std::cout << "\n";
 	int retnVal = 0;
-	while (true)
+	while (m_KeepUpdating)
 	{
 		try {
 			Header head = ReadHeader();

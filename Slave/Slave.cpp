@@ -17,6 +17,6 @@ int main(int argc, char *argv[])
 			std::cout << "Unknown exception: "<<err.what();
 			system("pause");
 		}
-	system("pause");
+		std::cout << "Quitting...";
 	return 0;
 }
